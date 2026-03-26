@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Great Grave Task UI</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
+  
+  /* SETUP */
+  .setup-bg { min-height: 100dvh; background: linear-gradient(160deg, #0f172a, #1e293b); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .setup-card { background: #fff; border-radius: 20px; padding: 48px 36px; width: 100%; max-width: 520px; box-shadow: 0 25px 60px rgba(0,0,0,0.3); }
+  .setup-icon { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, #2563EB, #7C3AED); margin-bottom: 16px; font-size: 28px; }
+  .setup-title { font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+  .setup-sub { font-size: 14px; color: #94a3b8; }
+  .field-label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px; }
+  .field-group { margin-bottom: 20px; }
+  .text-input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 16px; font-weight: 500; outline: none; color: #0f172a; font-family: inherit; transition: border-color 0.15s; }
+  .text-input:focus { border-color: #2563EB; }
+  .toggle-row { display: flex; gap: 10px; }
+  .toggle-btn { flex: 1; padding: 12px 8px; border-radius: 12px; border: 2px solid #e2e8f0; background: #fff; color: #64748b; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .toggle-btn.active { border-color: #2563EB; background: #eff6ff; color: #2563EB; font-weight: 700; }
+  .start-btn { width: 100%; margin-top: 8px; padding: 16px 24px; border-radius: 14px; border: none; font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.2s; letter-spacing: -0.01em; font-family: inherit; }
+  .start-btn.ready { background: linear-gradient(135deg, #2563EB, #7C3AED); color: #fff; }
+  .start-btn.disabled { background: #e2e8f0; color: #94a3b8; cursor: default; }
+  
+  /* TASK */
+  .task-bg { min-height: 100dvh; background: #f8fafc; }
+  .top-bar { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid #e2e8f0; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .top-bar-left { display: flex; align-items: center; gap: 12px; }
+  .condition-badge { font-size: 12px; font-weight: 700; color: #fff; padding: 4px 10px; border-radius: 6px; }
+  .session-info { font-size: 13px; color: #64748b; font-weight: 500; }
+  .progress-dots { display: flex; gap: 6px; }
+  .dot { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; transition: all 0.3s; }
+  .dot.done { color: #fff; }
+  .dot.current { background: #0f172a; color: #fff; }
+  .dot.pending { background: #e2e8f0; color: #94a3b8; }
+  
+  .task-content { max-width: 640px; margin: 0 auto; padding: 28px 24px 140px; }
+  .cat-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 10px; margin-bottom: 20px; }
+  .cat-badge-icon { font-size: 20px; }
+  .cat-badge-text { font-size: 14px; font-weight: 700; }
+  .cat-badge-count { font-size: 13px; color: #94a3b8; margin-left: 4px; }
+  .task-question { font-size: 20px; font-weight: 700; color: #0f172a; line-height: 1.5; margin-bottom: 20px; letter-spacing: -0.02em; }
+  
+  .mc-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+  .mc-btn { padding: 16px 20px; border-radius: 14px; border: 2px solid #e2e8f0; background: #fff; text-align: left; cursor: pointer; transition: all 0.15s; display: flex; align-items: flex-start; gap: 14px; font-family: inherit; }
+  .mc-btn.selected { background: rgba(0,0,0,0.02); }
+  .mc-letter { flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px; background: #f1f5f9; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; transition: all 0.15s; }
+  .mc-letter.selected { color: #fff; }
+  .mc-text { font-size: 15px; line-height: 1.6; color: #1e293b; font-weight: 400; }
+  .mc-text.selected { font-weight: 600; }
+  
+  .written-box { background: #fff; border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; }
+  .written-label { display: block; font-size: 14px; font-weight: 700; color: #475569; margin-bottom: 12px; }
+  .written-area { width: 100%; min-height: 120px; padding: 14px 16px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 15px; line-height: 1.7; resize: vertical; outline: none; color: #0f172a; font-family: inherit; }
+  .written-area:focus { border-color: #2563EB; }
+  
+  .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid #e2e8f0; padding: 16px 24px; display: flex; justify-content: center; }
+  .next-btn { width: 100%; max-width: 640px; padding: 18px 32px; border-radius: 14px; border: none; font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.2s; letter-spacing: -0.01em; font-family: inherit; }
+  .next-btn.ready { background: linear-gradient(135deg, #0f172a, #334155); color: #fff; }
+  .next-btn.disabled { background: #e2e8f0; color: #94a3b8; cursor: default; }
+  
+  /* RESULTS */
+  .results-bg { min-height: 100dvh; background: linear-gradient(160deg, #0f172a, #1e293b); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .results-card { background: #fff; border-radius: 20px; padding: 40px 32px; width: 100%; max-width: 560px; box-shadow: 0 25px 60px rgba(0,0,0,0.3); }
+  .results-icon { font-size: 48px; margin-bottom: 12px; }
+  .results-title { font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 6px; }
+  .results-sub { font-size: 14px; color: #64748b; }
+  .summary-row { display: flex; gap: 12px; margin-bottom: 24px; }
+  .summary-card { flex: 1; padding: 16px; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0; text-align: center; }
+  .summary-label { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+  .summary-value { font-size: 20px; font-weight: 700; color: #0f172a; }
+  .result-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0; margin-bottom: 8px; }
+  .result-item-icon { font-size: 18px; }
+  .result-item-info { flex: 1; }
+  .result-item-name { font-size: 13px; font-weight: 600; color: #1e293b; }
+  .result-item-time { font-size: 12px; color: #94a3b8; }
+  .result-item-badge { font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
+  .result-item-badge.correct { color: #059669; background: #ecfdf5; }
+  .result-item-badge.wrong { color: #DC2626; background: #fef2f2; }
+  .copy-btn { width: 100%; padding: 16px; border-radius: 14px; border: 2px solid #e2e8f0; background: #fff; color: #475569; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; margin-top: 20px; }
+  .copy-btn.copied { background: #f0fdf4; color: #059669; border-color: #bbf7d0; }
+  .raw-data { margin-top: 16px; }
+  .raw-data summary { font-size: 13px; color: #94a3b8; cursor: pointer; margin-bottom: 8px; }
+  .raw-data pre { background: #f1f5f9; padding: 16px; border-radius: 12px; font-size: 11px; line-height: 1.5; overflow: auto; max-height: 300px; color: #475569; white-space: pre-wrap; word-break: break-all; }
+  
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ===== SETUP SCREEN ===== -->
+<div id="setup-screen" class="setup-bg">
+  <div class="setup-card">
+    <div style="text-align:center; margin-bottom:36px">
+      <div class="setup-icon">📊</div>
+      <h1 class="setup-title">Great Grave User Study</h1>
+      <p class="setup-sub">Task Session Setup</p>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Participant ID</label>
+      <input id="pid-input" class="text-input" placeholder="예: P01">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Condition</label>
+      <div class="toggle-row">
+        <button class="toggle-btn" data-group="condition" data-value="Linear Chat" onclick="toggleSelect(this)">Linear Chat</button>
+        <button class="toggle-btn" data-group="condition" data-value="RWG System" onclick="toggleSelect(this)">RWG System</button>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Log</label>
+      <div class="toggle-row">
+        <button class="toggle-btn" data-group="log" data-value="A" onclick="toggleSelect(this)">Log A (회의록 요약)</button>
+        <button class="toggle-btn" data-group="log" data-value="B" onclick="toggleSelect(this)">Log B (팩트체킹)</button>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Condition Order</label>
+      <div class="toggle-row">
+        <button class="toggle-btn" data-group="order" data-value="1st" onclick="toggleSelect(this)">첫 번째 조건</button>
+        <button class="toggle-btn" data-group="order" data-value="2nd" onclick="toggleSelect(this)">두 번째 조건</button>
+      </div>
+    </div>
+    <button id="start-btn" class="start-btn disabled" onclick="startSession()" disabled>세션 시작</button>
+  </div>
+</div>
+
+<!-- ===== TASK SCREEN ===== -->
+<div id="task-screen" class="task-bg hidden">
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <span id="task-condition-badge" class="condition-badge"></span>
+      <span id="task-session-info" class="session-info"></span>
+    </div>
+    <div id="progress-dots" class="progress-dots"></div>
+  </div>
+  <div class="task-content">
+    <div id="cat-badge" class="cat-badge">
+      <span id="cat-icon" class="cat-badge-icon"></span>
+      <span id="cat-text" class="cat-badge-text"></span>
+      <span id="cat-count" class="cat-badge-count"></span>
+    </div>
+    <h2 id="task-question" class="task-question"></h2>
+    <div id="mc-options" class="mc-options"></div>
+    <div class="written-box">
+      <label id="written-label" class="written-label"></label>
+      <textarea id="written-area" class="written-area" placeholder="여기에 답변을 작성하세요..."></textarea>
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <button id="next-btn" class="next-btn disabled" onclick="handleNext()" disabled>다음 문항 →</button>
+  </div>
+</div>
+
+<!-- ===== RESULTS SCREEN ===== -->
+<div id="results-screen" class="results-bg hidden">
+  <div class="results-card">
+    <div style="text-align:center; margin-bottom:32px">
+      <div class="results-icon">✅</div>
+      <h1 class="results-title">세션 완료</h1>
+      <p id="results-sub" class="results-sub"></p>
+    </div>
+    <div class="summary-row">
+      <div class="summary-card"><div class="summary-label">총 소요시간</div><div id="total-time" class="summary-value"></div></div>
+      <div class="summary-card"><div class="summary-label">객관식 정답</div><div id="correct-count" class="summary-value"></div></div>
+    </div>
+    <div id="result-items"></div>
+    <button id="copy-btn" class="copy-btn" onclick="copyResults()">📋 결과 JSON 복사</button>
+    <details class="raw-data">
+      <summary>원본 데이터 보기</summary>
+      <pre id="raw-json"></pre>
+    </details>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const TASKS = {
+  A: [
+    { id:"A-T1", category:"Decision Recovery", question:"이 채팅에서 최종 채택된 primary evaluation metric은?",
+      options:["ROUGE","BERTScore","Decision Coverage Rate","사용자 유용성 평가 (User Usefulness)"], correctIndex:2,
+      writtenPrompt:"해당 결정의 근거를 1~2문장으로 요약하시오." },
+    { id:"A-T2", category:"Conflict Detection", question:"다음 중 채팅 내에서 서로 모순되는 주장 쌍은?",
+      options:["\"Extractive 접근으로 가자\" ↔ \"Hybrid로 전환하자\"",
+        "\"실제 회의 녹취록 사용\" ↔ \"시뮬레이션 전환 + 기존 annotation 프로토콜 유지\"",
+        "\"ROUGE는 부적합\" ↔ \"BERTScore를 보조로 쓰자\"",
+        "\"프롬프트 전략 연구\" ↔ \"구조 정보 효과로 좁히자\""], correctIndex:1,
+      writtenPrompt:"해당 모순이 발생한 맥락을 간단히 설명하시오." },
+    { id:"A-T3", category:"Provenance Tracing", question:"요약 방법론이 현재 형태에 이르기까지 거친 주요 변경 단계는 몇 회인가?",
+      options:["2단계","3단계","4단계","5단계"], correctIndex:1,
+      writtenPrompt:"각 변경 단계를 시간순으로 간략히 나열하시오." },
+    { id:"A-T4", category:"Version Tracking", question:"연구자의 RQ가 채팅 과정에서 총 몇 번 변경되었는가?",
+      options:["1회","2회 (3개 버전)","3회","4회"], correctIndex:1,
+      writtenPrompt:"최초 버전과 최종 버전의 핵심 차이를 1문장으로 서술하시오." }
+  ],
+  B: [
+    { id:"B-T1", category:"Decision Recovery", question:"이 채팅에서 최종 채택된 primary evaluation metric은?",
+      options:["Recall","FEVER Score","Precision@k","Explanation Quality"], correctIndex:2,
+      writtenPrompt:"해당 결정의 근거를 1~2문장으로 요약하시오." },
+    { id:"B-T2", category:"Conflict Detection", question:"다음 중 채팅 내에서 서로 모순되는 주장 쌍은?",
+      options:["\"2-stage로 가자\" ↔ \"3-stage로 바꾸자\"",
+        "\"FEVER 벤치마크로 평가 확정\" ↔ \"최신 뉴스 대상 전환 + FEVER 비교 프레임워크 유지\"",
+        "\"Precision 우선\" ↔ \"Recall도 중요\"",
+        "\"End-to-end RQ\" ↔ \"Retrieval 정밀도로 좁히자\""], correctIndex:1,
+      writtenPrompt:"해당 모순이 발생한 맥락을 간단히 설명하시오." },
+    { id:"B-T3", category:"Provenance Tracing", question:"팩트체킹 파이프라인이 현재 형태에 이르기까지 거친 주요 변경 단계는 몇 회인가?",
+      options:["2단계","3단계","4단계","5단계"], correctIndex:1,
+      writtenPrompt:"각 변경 단계를 시간순으로 간략히 나열하시오." },
+    { id:"B-T4", category:"Version Tracking", question:"연구자의 RQ가 채팅 과정에서 총 몇 번 변경되었는가?",
+      options:["1회","2회 (3개 버전)","3회","4회"], correctIndex:1,
+      writtenPrompt:"최초 버전과 최종 버전의 핵심 차이를 1문장으로 서술하시오." }
+  ]
+};
+
+const CAT_ICONS = { "Decision Recovery":"🎯", "Conflict Detection":"⚡", "Provenance Tracing":"🔗", "Version Tracking":"📋" };
+const CAT_COLORS = { "Decision Recovery":"#2563EB", "Conflict Detection":"#DC2626", "Provenance Tracing":"#7C3AED", "Version Tracking":"#059669" };
+
+// ===== STATE =====
+let session = { pid:"", condition:"", log:"", order:"" };
+let selections = { condition:"", log:"", order:"" };
+let currentTasks = [];
+let shuffledOrders = [];
+let idx = 0;
+let responses = [];
+let finalData = null;
+
+// ===== SETUP =====
+function toggleSelect(btn) {
+  const group = btn.dataset.group;
+  const value = btn.dataset.value;
+  document.querySelectorAll(`.toggle-btn[data-group="${group}"]`).forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  selections[group] = value;
+  checkReady();
+}
+
+document.getElementById("pid-input").addEventListener("input", checkReady);
+
+function checkReady() {
+  const pid = document.getElementById("pid-input").value.trim();
+  const ready = pid && selections.condition && selections.log && selections.order;
+  const btn = document.getElementById("start-btn");
+  btn.disabled = !ready;
+  btn.className = ready ? "start-btn ready" : "start-btn disabled";
+}
+
+function shuffle(arr) {
+  const indices = arr.map((_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices;
+}
+
+function startSession() {
+  session = {
+    pid: document.getElementById("pid-input").value.trim(),
+    condition: selections.condition,
+    log: selections.log,
+    order: selections.order
+  };
+  currentTasks = TASKS[session.log];
+  shuffledOrders = currentTasks.map(t => shuffle(t.options));
+  responses = currentTasks.map(() => ({ mc: null, written: "", startTime: null, endTime: null }));
+  idx = 0;
+
+  document.getElementById("setup-screen").classList.add("hidden");
+  document.getElementById("task-screen").classList.remove("hidden");
+  renderTask();
+}
+
+// ===== TASK =====
+function renderTask() {
+  const task = currentTasks[idx];
+  const color = CAT_COLORS[task.category];
+  const resp = responses[idx];
+  const order = shuffledOrders[idx];
+
+  if (resp.startTime === null) responses[idx].startTime = Date.now();
+
+  // Top bar
+  const badge = document.getElementById("task-condition-badge");
+  badge.textContent = session.condition;
+  badge.style.background = color;
+  document.getElementById("task-session-info").textContent = `${session.pid} · Log ${session.log} · ${session.order}`;
+
+  // Progress dots
+  const dotsEl = document.getElementById("progress-dots");
+  dotsEl.innerHTML = "";
+  currentTasks.forEach((t, i) => {
+    const d = document.createElement("div");
+    d.className = "dot " + (i < idx ? "done" : i === idx ? "current" : "pending");
+    if (i < idx) d.style.background = CAT_COLORS[currentTasks[i].category];
+    d.textContent = i < idx ? "✓" : (i + 1);
+    dotsEl.appendChild(d);
+  });
+
+  // Category badge
+  const catBadge = document.getElementById("cat-badge");
+  catBadge.style.background = color + "12";
+  document.getElementById("cat-icon").textContent = CAT_ICONS[task.category];
+  const catText = document.getElementById("cat-text");
+  catText.textContent = task.category;
+  catText.style.color = color;
+  document.getElementById("cat-count").textContent = `${idx + 1} / ${currentTasks.length}`;
+
+  // Question
+  document.getElementById("task-question").textContent = task.question;
+
+  // MC options
+  const mcEl = document.getElementById("mc-options");
+  mcEl.innerHTML = "";
+  order.forEach((origIdx, displayIdx) => {
+    const btn = document.createElement("button");
+    btn.className = "mc-btn" + (resp.mc === origIdx ? " selected" : "");
+    if (resp.mc === origIdx) btn.style.borderColor = color;
+
+    const letter = document.createElement("span");
+    letter.className = "mc-letter" + (resp.mc === origIdx ? " selected" : "");
+    if (resp.mc === origIdx) letter.style.background = color;
+    letter.textContent = String.fromCharCode(65 + displayIdx);
+
+    const text = document.createElement("span");
+    text.className = "mc-text" + (resp.mc === origIdx ? " selected" : "");
+    text.textContent = task.options[origIdx];
+
+    btn.appendChild(letter);
+    btn.appendChild(text);
+    btn.addEventListener("click", () => selectMC(origIdx));
+    mcEl.appendChild(btn);
+  });
+
+  // Written
+  document.getElementById("written-label").textContent = "✍️ " + task.writtenPrompt;
+  document.getElementById("written-area").value = resp.written;
+
+  // Next button
+  updateNextBtn();
+}
+
+function selectMC(origIdx) {
+  responses[idx].mc = origIdx;
+  renderTask();
+}
+
+document.getElementById("written-area").addEventListener("input", function() {
+  responses[idx].written = this.value;
+  updateNextBtn();
+});
+
+function updateNextBtn() {
+  const resp = responses[idx];
+  const ready = resp.mc !== null && resp.written.trim().length > 0;
+  const btn = document.getElementById("next-btn");
+  btn.disabled = !ready;
+  btn.className = ready ? "next-btn ready" : "next-btn disabled";
+  btn.textContent = idx < currentTasks.length - 1 ? "다음 문항 →" : "제출 완료 ✓";
+}
+
+function handleNext() {
+  const resp = responses[idx];
+  if (resp.mc === null || !resp.written.trim()) return;
+
+  responses[idx].endTime = Date.now();
+
+  if (idx < currentTasks.length - 1) {
+    idx++;
+    window.scrollTo(0, 0);
+    renderTask();
+  } else {
+    showResults();
+  }
+}
+
+// ===== RESULTS =====
+function showResults() {
+  const results = responses.map((r, i) => ({
+    taskId: currentTasks[i].id,
+    category: currentTasks[i].category,
+    selectedOption: r.mc !== null ? currentTasks[i].options[r.mc] : null,
+    selectedIndex: r.mc,
+    correctIndex: currentTasks[i].correctIndex,
+    isCorrect: r.mc === currentTasks[i].correctIndex,
+    writtenResponse: r.written,
+    durationMs: r.endTime - r.startTime,
+    durationSec: Math.round((r.endTime - r.startTime) / 1000)
+  }));
+
+  finalData = { ...session, timestamp: new Date().toISOString(), results };
+
+  const totalSec = results.reduce((s, r) => s + r.durationSec, 0);
+  const correct = results.filter(r => r.isCorrect).length;
+
+  document.getElementById("task-screen").classList.add("hidden");
+  document.getElementById("results-screen").classList.remove("hidden");
+
+  document.getElementById("results-sub").textContent = `${session.pid} · ${session.condition} · Log ${session.log}`;
+  document.getElementById("total-time").textContent = `${Math.floor(totalSec / 60)}분 ${totalSec % 60}초`;
+  document.getElementById("correct-count").textContent = `${correct} / ${results.length}`;
+
+  const itemsEl = document.getElementById("result-items");
+  itemsEl.innerHTML = "";
+  results.forEach(r => {
+    const div = document.createElement("div");
+    div.className = "result-item";
+    div.innerHTML = `
+      <span class="result-item-icon">${CAT_ICONS[r.category]}</span>
+      <div class="result-item-info">
+        <div class="result-item-name">${r.category}</div>
+        <div class="result-item-time">${r.durationSec}초</div>
+      </div>
+      <span class="result-item-badge ${r.isCorrect ? 'correct' : 'wrong'}">${r.isCorrect ? '정답' : '오답'}</span>
+    `;
+    itemsEl.appendChild(div);
+  });
+
+  document.getElementById("raw-json").textContent = JSON.stringify(finalData, null, 2);
+}
+
+function copyResults() {
+  const json = JSON.stringify(finalData, null, 2);
+  const btn = document.getElementById("copy-btn");
+  
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(json).then(() => {
+      btn.textContent = "✓ 클립보드에 복사됨";
+      btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "📋 결과 JSON 복사"; btn.classList.remove("copied"); }, 2000);
+    });
+  } else {
+    const ta = document.createElement("textarea");
+    ta.value = json;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    btn.textContent = "✓ 클립보드에 복사됨";
+    btn.classList.add("copied");
+    setTimeout(() => { btn.textContent = "📋 결과 JSON 복사"; btn.classList.remove("copied"); }, 2000);
+  }
+}
+</script>
+</body>
+</html>
