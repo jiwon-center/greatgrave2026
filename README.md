@@ -5,7 +5,6 @@
 Great Grave transforms linear LLM chat logs into **Research Workflow Graphs**—structured, navigable representations that make the latent intellectual structure of extended conversations explicit. The system operates as a browser overlay on ChatGPT, augmenting the existing interface with a List View for hierarchical retrieval and a Graph View for relational exploration.
 
 ![System overview](figures/system-overview.png)
-<!-- Replace with an anonymized version of Figure 1 from the paper. -->
 
 ---
 
