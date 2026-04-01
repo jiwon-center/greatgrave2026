@@ -18,7 +18,7 @@
    ******************************************************************/
   const PROXY_URL = "http://127.0.0.1:8787/analyze";
   const LOG_URL   = "http://127.0.0.1:8787/log";
-  const OPENAI_MODEL = "gpt-4o-mini";
+  const OPENAI_MODEL = "gpt-4o";
 
   const PANEL_ID = "research-work-graph-overlay-panel";
   const ACTIVE_CLASS = "research-work-graph-active-item";
